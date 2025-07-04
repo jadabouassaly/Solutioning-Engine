@@ -52,15 +52,31 @@ def generate_bom(user_text: str) -> str:
 
 
 
-# Helper to parse Markdown table into DataFrame
+# Improved helper to parse Markdown table into DataFrame
 def markdown_table_to_dataframe(md_table: str) -> pd.DataFrame:
-    lines = [line for line in md_table.splitlines() if line.strip()]
-    header = [h.strip() for h in lines[0].strip("|").split("|")]
-    data_rows = []
-    for line in lines[2:]:  # skip header and separator
-        cells = [c.strip() for c in line.strip("|").split("|")]
-        data_rows.append(cells)
-    return pd.DataFrame(data_rows, columns=header)
+    lines = md_table.splitlines()
+    # Extract only the table lines starting with '|'
+    table_lines = [l for l in lines if l.strip().startswith("|")]
+    if len(table_lines) < 2:
+        raise ValueError("No Markdown table found in response.")
+    header_line = table_lines[0]
+    separator_line = table_lines[1]
+    data_lines = table_lines[2:]
+
+    # Parse header
+    headers = [h.strip() for h in header_line.strip().strip("|").split("|")]
+    df_rows = []
+    for line in data_lines:
+        # Stop at first non-row if needed, but here assume contiguous
+        cells = [c.strip() for c in line.strip().strip("|").split("|")]
+        # Adjust row length to match header
+        if len(cells) < len(headers):
+            cells += [""] * (len(headers) - len(cells))
+        elif len(cells) > len(headers):
+            cells = cells[:len(headers)]
+        df_rows.append(cells)
+
+    return pd.DataFrame(df_rows, columns=headers)
 
 # Generate and display
 if st.button("Generate BoM"):
@@ -70,13 +86,13 @@ if st.button("Generate BoM"):
         with st.spinner("Generating BoM..."):
             bom_markdown = generate_bom(user_input)
 
-        # Display the markdown table
+        # Display the raw Markdown table for reference
         st.markdown(bom_markdown)
 
-        # Convert to DataFrame and display in-app
+        # Convert to DataFrame and display interactively
         try:
             df_bom = markdown_table_to_dataframe(bom_markdown)
-            st.subheader("BoM Table")
-            st.table(df_bom)
+            st.subheader("BoM DataFrame")
+            st.dataframe(df_bom)
         except Exception as e:
             st.error(f"⚠️ Could not parse BoM table: {e}")

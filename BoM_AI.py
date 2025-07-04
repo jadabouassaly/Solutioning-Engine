@@ -12,7 +12,7 @@ import pandas as pd
 # Load API key from environment variable
 #openai.api_key = os.getenv("OPENAI_API_KEY")
 openai.api_key =              
-if not openai.api_key:
+if not openai.api_key:st.secrets["OPENAI_API_KEY"]
     st.error("Please set the OPENAI_API_KEY environment variable.")
     st.stop()
 

@@ -92,7 +92,7 @@ if st.button("Generate BoM"):
         # Convert to DataFrame and display interactively
         try:
             df_bom = markdown_table_to_dataframe(bom_markdown)
-            st.subheader("BoM DataFrame")
+            st.subheader("BoM")
             st.dataframe(df_bom)
         except Exception as e:
             st.error(f"⚠️ Could not parse BoM table: {e}")
